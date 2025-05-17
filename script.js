@@ -10,7 +10,12 @@ document.addEventListener("DOMContentLoaded", () => {
         link.href = repo.html_url;
         link.textContent = repo.name;
         link.target = "_blank";
+
+        const description = document.createElement("p");
+        description.textContent = repo.description || "No description provided.";
+
         li.appendChild(link);
+        li.appendChild(description);
         repoList.appendChild(li);
       });
     })
