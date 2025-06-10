@@ -1,26 +1,32 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const repoList = document.getElementById("repo-list");
+  const repoContainer = document.querySelector(".repo-container");
 
   fetch("https://api.github.com/users/ishaanseth/repos")
     .then(response => response.json())
     .then(repos => {
       repos.forEach(repo => {
-        const li = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = repo.html_url;
-        link.textContent = repo.name;
-        link.target = "_blank";
+        const repoCard = document.createElement("div");
+        repoCard.classList.add("repo-card");
 
-        const description = document.createElement("p");
-        description.textContent = repo.description || "No description provided.";
+        const repoName = document.createElement("h3");
+        repoName.textContent = repo.name;
 
-        li.appendChild(link);
-        li.appendChild(description);
-        repoList.appendChild(li);
+        const repoDescription = document.createElement("p");
+        repoDescription.textContent = repo.description || "No description provided.";
+
+        const repoLink = document.createElement("a");
+        repoLink.href = repo.html_url;
+        repoLink.textContent = "View Repository";
+        repoLink.target = "_blank";
+
+        repoCard.appendChild(repoName);
+        repoCard.appendChild(repoDescription);
+        repoCard.appendChild(repoLink);
+        repoContainer.appendChild(repoCard);
       });
     })
     .catch(error => {
       console.error("Error fetching repositories:", error);
-      repoList.innerHTML = "<li>Unable to load repositories.</li>";
+      repoContainer.innerHTML = "<p>Unable to load repositories.</p>";
     });
 });
