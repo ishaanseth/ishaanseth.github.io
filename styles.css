@@ -114,35 +114,6 @@ section h2 {
   color: #3498db; /* Blue for repo name */
   margin-top: 0;
   margin-bottom: 10px;
-  /* display: inline-block; Align heading with the icon */
-  /* vertical-align: middle; Align heading with the icon */
-  /* The above were moved to the updated rule below */
-}
-
-/* Styles for the header within a repo card (icon + title) */
-.repo-header {
-  display: flex; /* Arrange icon and title in a row */
-  align-items: center; /* Vertically align icon and title */
-  margin-bottom: 10px; /* Space below the header (icon + title) */
-}
-
-/* Icon Styles */
-.repo-icon {
-  font-size: 1.5em;
-  margin-right: 10px;
-  /* display: inline-block; /* Potentially redundant with flex parent */
-  /* vertical-align: middle; /* Potentially redundant with flex parent */
-}
-
-/* Adjustments for repo name to align with icon if needed */
-.repo-card h3 {
-  /* display: inline-block; /* Potentially redundant if flex parent handles alignment */
-  /* vertical-align: middle; /* Potentially redundant */
-  font-size: 1.4em;
-  color: #3498db;
-  margin-top: 0;
-  /* margin-bottom: 10px; /* Removed, repo-header will handle this spacing */
-  margin-left: 0; /* Ensure no extra left margin if icon provides right margin */
 }
 
 .repo-card p {
