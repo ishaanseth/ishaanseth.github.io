@@ -1,7 +1,7 @@
 :root{
   --ground:#ffffff; --ink:#1b1d21; --ink-dim:#54575e; --ink-faint:#797d85;
   --rule:#b9bcc3; --rule-soft:#e2e4e8; --link:#29527d; --code-bg:#f3f4f6; --cell:#fafafb;
-  --tag:#eef0f3;
+  --tag:#eef0f3; --cell-star:#edeff3;
   --serif:Charter,"Bitstream Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
 }
@@ -9,18 +9,18 @@
   :root{
     --ground:#15171b; --ink:#dcdee4; --ink-dim:#9a9ea8; --ink-faint:#7b7f89;
     --rule:#3a3e46; --rule-soft:#262a31; --link:#8aaed4; --code-bg:#1d2027; --cell:#1a1d23;
-    --tag:#22262d;
+    --tag:#22262d; --cell-star:#212630;
   }
 }
 :root[data-theme="dark"]{
   --ground:#15171b; --ink:#dcdee4; --ink-dim:#9a9ea8; --ink-faint:#7b7f89;
   --rule:#3a3e46; --rule-soft:#262a31; --link:#8aaed4; --code-bg:#1d2027; --cell:#1a1d23;
-  --tag:#22262d;
+  --tag:#22262d; --cell-star:#212630;
 }
 :root[data-theme="light"]{
   --ground:#ffffff; --ink:#1b1d21; --ink-dim:#54575e; --ink-faint:#797d85;
   --rule:#b9bcc3; --rule-soft:#e2e4e8; --link:#29527d; --code-bg:#f3f4f6; --cell:#fafafb;
-  --tag:#eef0f3;
+  --tag:#eef0f3; --cell-star:#edeff3;
 }
 
 *{box-sizing:border-box}
@@ -123,12 +123,14 @@ table.sb td.bt{border-top:1.75px solid var(--ink)}
 table.sb td.bb{border-bottom:1.75px solid var(--ink)}
 table.sb td.bl{border-left:1.75px solid var(--ink)}
 table.sb td.br{border-right:1.75px solid var(--ink)}
+table.sb td.st{background:var(--cell-star)}
 .sg{color:var(--ink);font-size:14px}
 .rl{opacity:.6}
 
 .morse{display:flex;align-items:stretch;height:22px;width:100%;max-width:36em}
 .morse i{display:block}
 .morse i.mk{background:var(--ink)}
+.morse i.gp{background:transparent}
 .mcode{font-family:var(--mono);font-size:13px;color:var(--ink-dim);word-break:break-all;
        line-height:1.75;margin:0;max-width:36em;letter-spacing:.04em}
 
