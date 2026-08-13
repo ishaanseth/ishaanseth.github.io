@@ -1,46 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Ishaan Seth | Portfolio</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ishaan Seth</title>
+<meta name="description" content="Ishaan Seth. Final-year Electrical Engineering student at IIT Madras, working on quantitative research, ML systems and low-level engineering." />
+<meta name="author" content="Ishaan Seth" />
+<link rel="stylesheet" href="style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
-  <header>
-    <h1>Ishaan Seth</h1>
-    <p>2nd Year Electrical Engineering Student at IIT Madras</p>
-    <nav>
-      <a href="https://www.linkedin.com/in/ishaan-seth" target="_blank">LinkedIn</a>
-      <a href="https://github.com/ishaanseth" target="_blank">GitHub</a>
-    </nav>
-  </header>
+<div class="col">
 
-  <main>
-    <section id="about">
-      <h2>About Me</h2>
-      <p>
-        I'm a sophomore pursuing Electrical Engineering at IIT Madras, with a keen interest in AI, data analysis, and software development.
-      </p>
-    </section>
+<header class="site">
+  <div class="who">
+    <a class="brand" href="/">Ishaan Seth</a>
+    <span class="role">Electrical Engineering, IIT Madras</span>
+  </div>
+  <nav>
+    <a href="https://github.com/ishaanseth">GitHub</a>
+    <a href="mailto:ishaanseth2005@gmail.com">Email</a>
+    <a href="https://linkedin.com/in/ishaan-seth">LinkedIn</a>
+  </nav>
+</header>
 
-    <section id="projects">
-      <h2>Public Repositories</h2>
-      <div class="repo-container">
-        <!-- Repository list will be populated by JavaScript -->
-      </div>
-    </section>
+<main>
 
-    <section id="contact">
-      <h2>Contact</h2>
-      <p>Email: <!--email_off-->ishaanseth2005@gmail.com<!--/email_off--></p>
-    </section>
-  </main>
+<p class="lede">I am a final-year <strong>Electrical Engineering</strong> undergraduate at IIT Madras,
+reading concurrently for a <strong>BS in Data Science</strong>. Most of my work sits where quantitative
+research meets systems engineering: alpha research and live trading strategies, machine learning
+systems that have to answer quickly rather than eventually, and the occasional descent into physics
+engines and silicon layouts.</p>
 
-  <footer>
-    <p>&copy; 2025 Ishaan Seth</p>
-  </footer>
+<p class="lede">Lately that has meant an automated alpha research engine at a quant fund, real-time
+avatar interaction at an AI startup, and a paper plane simulator with aerodynamics I refused to
+approximate.</p>
 
-  <script src="script.js"></script>
+<h2 class="sect">Experience</h2>
+
+<div class="entry">
+  <div class="top">
+    <span class="name">Quant Researcher, Intern</span>
+    <span class="when">May 2026 &ndash; Jul 2026</span>
+  </div>
+  <p class="where">NK Securities Research</p>
+  <ul>
+    <li>Built <strong>AutoResearcher</strong>, an automated alpha mining engine combining LLM retrieval
+      with Monte Carlo tree search, sweeping over 10,000 alphas per day across 1,100+ factors under
+      explicit guardrails.</li>
+    <li>Deployed a live low-frequency strategy on a &#8377;20 Cr book, returning roughly
+      <strong>&#8377;20 lakh net PnL in four days</strong> from the top-performing alpha.</li>
+    <li>Adapted the engine to high-frequency and intraday support-resistance trading using order-flow
+      features, mining 7,000 alphas per day at a 70% hit rate.</li>
+  </ul>
+  <div class="chips"><span>alpha research</span><span>MCTS</span><span>order flow</span><span>Python</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name">Machine Learning Engineer, Intern</span>
+    <span class="when">May 2025 &ndash; Jul 2025</span>
+  </div>
+  <p class="where">Kreyn.ai</p>
+  <ul>
+    <li>Worked on AI <strong>Digital Human</strong> models, focused on real-time, low-latency avatar
+      interaction.</li>
+    <li>Ran comparative evaluations of LLM and speech models to pick the right ones for the pipeline.</li>
+    <li>Engineered the latency reductions that made conversation feel natural, chiefly parallel
+      processing and streaming.</li>
+  </ul>
+  <div class="chips"><span>LLMs</span><span>speech</span><span>real-time</span><span>Pipecat</span></div>
+</div>
+
+<h2 class="sect">Selected projects</h2>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/Aerogami">Aerogami</a></span>
+    <span class="when">2024 &ndash; 2025</span>
+  </div>
+  <p class="desc">A paper plane simulator built in Unity with custom paper physics, so folds, creases
+    and soft-body deformation actually change how the plane flies. Effectively a digital twin of
+    airspace, with real aerodynamic factors driving the flight model.</p>
+  <div class="chips"><span>Unity</span><span>C#</span><span>soft-body physics</span><span>aerodynamics</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/sebi-portfolio-tracker">SEBI Portfolio Tracker</a></span>
+    <span class="when">2025</span>
+  </div>
+  <p class="desc">A Python platform that scrapes, analyses and visualises portfolio management data
+    published by SEBI, with predictive models, REST APIs and interactive dashboards on top.</p>
+  <div class="chips"><span>Python</span><span>scraping</span><span>REST</span><span>dashboards</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/Virtual-TA">Virtual TA</a></span>
+    <span class="when">2025</span>
+  </div>
+  <p class="desc">A teaching assistant that answers course questions from 3,500+ scraped and embedded
+    course documents through a RAG pipeline. FastAPI and Uvicorn backend with Gemini behind it, built
+    to scale on Google Cloud Run.</p>
+  <div class="chips"><span>RAG</span><span>FastAPI</span><span>Gemini</span><span>GCP</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/deutsche-bank-buildathon">LiquiFin</a></span>
+    <span class="when">2024</span>
+  </div>
+  <p class="desc">An AI financial advisor that scrapes market news, runs BART sentiment analysis over
+    it and serves investment suggestions from a MongoDB backend. Second place out of 90+ teams at the
+    Deutsche Bank Buildathon.</p>
+  <div class="chips"><span>NLP</span><span>sentiment</span><span>MongoDB</span><span>TypeScript</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/sms_classification">SMS Classification</a></span>
+    <span class="when">2024</span>
+  </div>
+  <p class="desc">An RNN that separates spam from legitimate messages, using GloVe embeddings,
+    cross-entropy loss and Adam. 98.50% accuracy on held-out data.</p>
+  <div class="chips"><span>PyTorch</span><span>RNN</span><span>GloVe</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/Convolve">Convolve 3.0</a></span>
+    <span class="when">2025</span>
+  </div>
+  <p class="desc">Feed-forward models for credit card risk prediction and for choosing per-user email
+    send times to maximise open rates. Top 52 of 1,500+ teams in the Pan-IIT hackathon.</p>
+  <div class="chips"><span>deep learning</span><span>tabular</span><span>credit risk</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/Datalyst">Datalyst</a></span>
+    <span class="when">2026</span>
+  </div>
+  <p class="desc">A data analyst agent that takes a dataset and a question and works out the analysis
+    itself.</p>
+  <div class="chips"><span>agents</span><span>Python</span></div>
+</div>
+
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="https://github.com/ishaanseth/Suppl-ai">Suppl-ai</a></span>
+    <span class="when">2025</span>
+  </div>
+  <p class="desc">An AI consulting bot that reads a business problem and returns practical
+    recommendations, with automatic diagram generation and semantic search over prior context.</p>
+  <div class="chips"><span>LLMs</span><span>semantic search</span></div>
+</div>
+
+<p style="margin:16px 0 0;font-size:15px;color:var(--ink-dim)">More on
+  <a href="https://github.com/ishaanseth?tab=repositories">GitHub</a>, including game development work,
+  course projects and hackathon submissions.</p>
+
+<h2 class="sect">Selected achievements</h2>
+<ul class="facts">
+  <li>Awarded the <strong>NK Securities Research Scholarship</strong> (&#8377;1,25,000) for the 2025
+    research scholarship test, and a <strong>&#8377;2,00,000 AI.Tech Emerging Scholars</strong> award
+    for promise in AI research.</li>
+  <li><strong>Second place</strong> of 90+ teams at the Deutsche Bank Buildathon, and a special mention
+    at the <strong>Nomura Quant Challenge</strong> for quantitative analysis.</li>
+  <li><strong>Fourth place</strong> at Inter IIT Tech Meet 13.0 with the GameDev Guild, building
+    Chimera Forge for the India Game Developer Conference problem statement.</li>
+  <li>Top 52 of 1,500+ teams at Convolve 3.0, and 11th of 168 at the AI Club SummerSchool hackathon.</li>
+  <li>Top <strong>0.14% in JEE Main</strong> among 1.1 million candidates and top 0.27% in JEE Advanced;
+    international rank 201 in the SOF National Cyber Olympiad finals.</li>
+  <li>Rated 1425 on Codeforces, with 50+ data structures and algorithms problems solved across
+    Codeforces and LeetCode.</li>
+</ul>
+
+<h2 class="sect">Positions</h2>
+<div class="entry">
+  <div class="top">
+    <span class="name">Manager, GameDev vertical</span>
+    <span class="when">Apr 2025 &ndash; present</span>
+  </div>
+  <p class="where">Envisage, Centre for Innovation, IIT Madras</p>
+  <ul>
+    <li>Leading a team of 10 coordinators across project execution, upskilling and vertical
+      management.</li>
+    <li>Designed and ran summer training on Blender, Unity and Godot. Previously a GameDev coordinator
+      from June 2024, building research-based games that model real situations.</li>
+  </ul>
+</div>
+
+<h2 class="sect">Education</h2>
+<dl class="kv">
+  <dt>B.Tech</dt><dd>Electrical Engineering, IIT Madras. CGPA 8.10/10, expected 2027.</dd>
+  <dt>BS</dt><dd>Data Science, IIT Madras. CGPA 9.17/10, expected 2027.</dd>
+  <dt>Class XII</dt><dd>DAV Public School, Airoli (CBSE). 96.6%, 2023.</dd>
+</dl>
+
+<h2 class="sect">Tools</h2>
+<dl class="kv">
+  <dt>Languages</dt><dd>Python, C, C++, C#, JavaScript, TypeScript, Bash</dd>
+  <dt>ML and data</dt><dd>PyTorch, TensorFlow, Keras, scikit-learn, pandas, NumPy, SciPy, OpenCV</dd>
+  <dt>Systems</dt><dd>FastAPI, MongoDB, Docker, Google Cloud, Sentry, Pipecat</dd>
+  <dt>Graphics</dt><dd>Unity, Blender, Godot, ShaderLab</dd>
+</dl>
+
+<!-- Writing section: uncomment once the ASIC puzzle results are public.
+<h2 class="sect">Writing</h2>
+<div class="entry">
+  <div class="top">
+    <span class="name"><a href="/writing/asic-puzzle/">Recovering a netlist from a GDSII mask</a></span>
+    <span class="when">Aug 2026</span>
+  </div>
+  <p class="desc">Pulling 728 gates back out of raw polygons in the Jane Street ASIC puzzle, working
+    out why the extraction can be trusted, and finding a Star Battle judge underneath.</p>
+</div>
+-->
+
+<h2 class="sect">Elsewhere</h2>
+<ul class="facts">
+  <li><a href="https://github.com/ishaanseth">GitHub</a> &middot;
+      <a href="https://linkedin.com/in/ishaan-seth">LinkedIn</a> &middot;
+      <a href="mailto:ishaanseth2005@gmail.com">ishaanseth2005@gmail.com</a></li>
+  <li><a href="https://codeforces.com/profile/ishxxn">Codeforces</a> &middot;
+      <a href="https://www.leetcode.com/azyde">LeetCode</a> &middot;
+      <a href="https://kaggle.com/azyde1">Kaggle</a></li>
+</ul>
+
+</main>
+
+<div class="foot">
+  <div>&copy; 2026 Ishaan Seth. Built as a static page, no trackers.</div>
+</div>
+
+</div>
 </body>
 </html>

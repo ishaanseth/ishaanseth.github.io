@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Recovering a netlist from a GDSII mask | Ishaan Seth</title>
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+<meta name="googlebot" content="noindex, nofollow" />
+<meta name="referrer" content="no-referrer" />
+<meta name="author" content="Ishaan Seth" />
+<link rel="stylesheet" href="../../style.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+<div class="col">
+
+<header class="site">
+  <div class="who">
+    <a class="brand" href="/">Ishaan Seth</a>
+    <span class="role">Electrical Engineering, IIT Madras</span>
+  </div>
+  <nav>
+    <a href="https://github.com/ishaanseth">GitHub</a>
+    <a href="mailto:ishaanseth2005@gmail.com">Email</a>
+    <a href="https://linkedin.com/in/ishaan-seth">LinkedIn</a>
+  </nav>
+</header>
+
+<a class="back" href="/">&#8592; Back to home</a>
+
+<p class="notice">This page is unlisted while the Jane Street ASIC puzzle is still running. It is not
+linked from anywhere on the site and is excluded from search engines. Please do not circulate the link
+until the results are announced.</p>
+
+<article>
+
+<h1 class="title">Recovering a netlist from a GDSII mask, and solving the puzzle it implements</h1>
+<p class="byline">Notes on the Jane Street ASIC reverse-engineering puzzle, August 2026</p>
+
+<p class="abstract">The puzzle ships a finished mask and very little else: no netlist, no source, and
+no statement of what the chip is for. These notes describe how I recovered a 728-cell gate-level
+netlist from the layout, what convinced me the recovery was exact rather than merely plausible, and
+how the recovered circuit turned out to be a judge for a Star Battle puzzle. The string the chip
+prints once it is satisfied is <code>(* TWO STARS *)</code>.</p>
+
+<h2><span class="sn">1.</span>Extracting connectivity from the layout</h2>
+<p>Opening <code>puzzle.gds</code> in <a href="https://heitzmann.github.io/gdstk/">gdstk</a> shows
+that the standard cell names were left intact. There are 81 structures, a top cell called
+<code>puzzle</code>, and 9,875 placements drawn from the <code>sky130_fd_sc_hd</code> library along
+with a handful of via macros. Nothing therefore has to be recognised at the transistor level, and the
+only real question is which cell pins are electrically joined to which wires.</p>
+<p>I wrote a small extractor on top of the <code>STRtree</code> index in
+<a href="https://shapely.readthedocs.io/">shapely</a>. It applies two rules. Shapes on the same layer
+that intersect belong to the same net, and a cut joins whatever it overlaps on the layer immediately
+below and the layer immediately above. After the hierarchy is flattened, every metal polygon and every
+cut goes into a union-find structure. Pins are then located from the text labels that each cell carries
+on its own <code>li1</code> geometry, with each point-in-polygon lookup restricted to the shapes
+belonging to that particular instance so that a neighbouring cell's pin cannot be picked up by mistake.
+Top-level ports come from the labels on <code>met3</code>.</p>
+
+<figure>
+  <div class="scroll"><table class="dt">
+    <thead><tr><th>Recovered design</th><th class="n"></th></tr></thead>
+    <tbody>
+      <tr><td>logic cells</td><td class="n">728</td></tr>
+      <tr><td>flip-flops (84 with reset, 4 with set, 4 plain)</td><td class="n">92</td></tr>
+      <tr><td>nets</td><td class="n">741</td></tr>
+      <tr><td>cell and via placements in the GDS</td><td class="n">9,875</td></tr>
+      <tr><td>die size</td><td class="n">200 &#215; 300 &#181;m</td></tr>
+      <tr><td>serial input word</td><td class="n">121 bits</td></tr>
+    </tbody>
+  </table></div>
+  <figcaption><b>Table 1.</b> What came out of the extractor.</figcaption>
+</figure>
+
+<figure>
+  <div class="scroll"><table class="dt">
+    <thead><tr><th>Role</th><th>Layer</th><th class="n">Shapes</th><th>Joins</th></tr></thead>
+    <tbody>
+      <tr><td>local interconnect</td><td class="m">li1 (67/20)</td><td class="n">13,931</td><td></td></tr>
+      <tr><td>metal 1</td><td class="m">68/20</td><td class="n">14,366</td><td></td></tr>
+      <tr><td>metal 2</td><td class="m">69/20</td><td class="n">8,517</td><td></td></tr>
+      <tr><td>metal 3</td><td class="m">70/20</td><td class="n">2,547</td><td></td></tr>
+      <tr><td>metal 4</td><td class="m">71/20</td><td class="n">855</td><td></td></tr>
+      <tr><td>metal 5</td><td class="m">72/20</td><td class="n">144</td><td></td></tr>
+      <tr><td>contact</td><td class="m">mcon (67/44)</td><td class="n">19,764</td><td class="m">li1 to met1</td></tr>
+      <tr><td>via 1</td><td class="m">68/44</td><td class="n">6,869</td><td class="m">met1 to met2</td></tr>
+      <tr><td>via 2</td><td class="m">69/44</td><td class="n">3,423</td><td class="m">met2 to met3</td></tr>
+      <tr><td>via 3</td><td class="m">70/44</td><td class="n">3,159</td><td class="m">met3 to met4</td></tr>
+      <tr><td>via 4</td><td class="m">71/44</td><td class="n">108</td><td class="m">met4 to met5</td></tr>
+    </tbody>
+  </table></div>
+  <figcaption><b>Table 2.</b> Every layer the extractor reads. Roughly 40,000 polygons and 33,000
+    cuts, resolved into 741 nets in about 22 seconds.</figcaption>
+</figure>
+
+<p>My first version of the extractor bridged layers using the via cell references that the router
+places, which seemed like the natural reading of the file. That version quietly lost every
+<code>RESET_B</code> connection in the design. The reason is that the sky130 cells already contain an
+<code>mcon</code> cut sitting on each pin's label point, so the router connects to a pin simply by
+painting met1 over that cut, without instantiating a via macro at all. Bridging on cut geometry rather
+than on via instances fixes the problem, and it is a closer description of the physical structure
+anyway.</p>
+
+<h2><span class="sn">2.</span>Checking the extraction</h2>
+<p>A netlist that is almost right is not much use here, because the likely failure mode is a netlist
+that looks entirely reasonable and computes the wrong function. I did not try to interpret the design
+until the extraction had been checked from two independent directions.</p>
+<p>The first check uses the warm-up example in the repository, which ships both
+<code>04_final.gds</code> and the <code>01_netlist.v</code> that produced it. Running the extractor on
+that GDS returns 79 cells with a cell-type histogram matching the reference netlist exactly, and no net
+is left undriven or multiply driven. This is also the check that exposed the <code>mcon</code> problem,
+since sixteen resets came out dangling where the reference netlist ties them to <code>rst_n</code>.</p>
+<p>The second check uses the sample waveform. Replaying all 312 clock edges of
+<code>example_inputs.vcd</code> through the recovered puzzle netlist reproduces <code>O[7:0]</code> and
+<code>success</code> at every edge with no mismatches, including both <code>TRY AGAIN</code> bursts.</p>
+<p>Two weaker signals also pointed the right way. The combinational graph came out acyclic on the first
+attempt, and exactly one net in the whole design has no driver. Both are what one would expect from a
+correct reading of a synthesised netlist.</p>
+
+<h2><span class="sn">3.</span>Cell models and simulation</h2>
+<p>Cell behaviour did not have to be guessed at, because SkyWater publishes a functional Verilog model
+for every cell in the library. Each model is a short list of gate primitives, so I downloaded all 67
+and wrote a parser of about ninety lines that turns them into Python callables. That avoids deriving
+truth tables for cells such as <code>o2bb2a</code> or <code>a21boi</code> by hand, which is easy to get
+subtly backwards.</p>
+<p>The first simulator was an interpreter that walked the netlist on every evaluation. It was correct
+but too slow to explore with, and a sweep of 122 runs failed to finish inside a two minute limit. I
+replaced it with a compiler: the gates are visited in topological order, one Python assignment is
+emitted per primitive, and the resulting source is <code>exec</code>'d into a function.</p>
+
+<figure>
+  <div class="scroll"><table class="dt">
+    <thead><tr><th>Simulator</th><th class="n">312-edge VCD replay</th></tr></thead>
+    <tbody>
+      <tr><td>interpreted</td><td class="n">1.99 s</td></tr>
+      <tr><td>compiled to Python source</td><td class="n">0.087 s</td></tr>
+    </tbody>
+  </table></div>
+  <figcaption><b>Table 3.</b> A factor of 23, which was enough to make thousands of experiments
+    practical.</figcaption>
+</figure>
+
+<h2><span class="sn">4.</span>Identifying the blocks</h2>
+<p>Once simulation is cheap, the quickest route to understanding 92 flip-flops is to experiment on the
+circuit rather than to work through its algebra by hand.</p>
+<p>The first technique was exhaustive cofactoring. No flip-flop's next-state cone depends on more than
+13 signals, so each one can be enumerated completely, and slicing the resulting table by counter value
+makes the structure legible. This showed a counter that cycles modulo 11 together with a second counter
+that advances whenever the first wraps, so the chip reads eleven groups of eleven bits. It also showed a
+motif that recurs throughout the design: pairs of flip-flops arranged as saturating two-bit counters,
+each incrementing on <code>I</code> during one particular time slot.</p>
+<p>The second technique settled the details. I loaded words containing a single set bit, swept that bit
+across all 121 positions, and recorded which flip-flops ended up different. Because the counters
+saturate rather than wrap, one star always flips the low bit of any counter watching it, so the set of
+positions that disturb a given counter is exactly the set of grid cells that counter is responsible for.
+Eleven of them turned out to watch columns. The other eleven watch irregular connected shapes that
+partition the grid exactly.</p>
+
+<figure>
+  <div class="gridwrap">
+    <table class="sb">
+<tr><td class="gc bt bl"><span class="rl">I</span></td><td class="gc bt"><span class="rl">I</span></td><td class="gc bt bb"><span class="rl">I</span></td><td class="gc bt"><span class="rl">I</span></td><td class="gc bt br"><span class="rl">I</span></td><td class="gc bt bl"><span class="rl">D</span></td><td class="gc bt bb br"><span class="rl">D</span></td><td class="gc bt bl br st"><span class="sg">&#9733;</span></td><td class="gc bt bl"><span class="rl">G</span></td><td class="gc bt br st"><span class="sg">&#9733;</span></td><td class="gc bt bl br"><span class="rl">C</span></td></tr>
+<tr><td class="gc bl st"><span class="sg">&#9733;</span></td><td class="gc br"><span class="rl">I</span></td><td class="gc bt bl br"><span class="rl">K</span></td><td class="gc bb bl"><span class="rl">I</span></td><td class="gc bb br"><span class="rl">I</span></td><td class="gc bl br st"><span class="sg">&#9733;</span></td><td class="gc bt bb bl"><span class="rl">H</span></td><td class="gc br"><span class="rl">H</span></td><td class="gc bb bl"><span class="rl">G</span></td><td class="gc br"><span class="rl">G</span></td><td class="gc bl br"><span class="rl">C</span></td></tr>
+<tr><td class="gc bl"><span class="rl">I</span></td><td class="gc br"><span class="rl">I</span></td><td class="gc bl br"><span class="rl">K</span></td><td class="gc bt bl"><span class="rl">D</span></td><td class="gc bt bb"><span class="rl">D</span></td><td class="gc bb"><span class="rl">D</span></td><td class="gc bt bb br"><span class="rl">D</span></td><td class="gc bb bl st"><span class="sg">&#9733;</span></td><td class="gc bt br"><span class="rl">H</span></td><td class="gc bb bl br st"><span class="sg">&#9733;</span></td><td class="gc bl br"><span class="rl">C</span></td></tr>
+<tr><td class="gc bb bl st"><span class="sg">&#9733;</span></td><td class="gc br"><span class="rl">I</span></td><td class="gc bl br st"><span class="sg">&#9733;</span></td><td class="gc bl br"><span class="rl">D</span></td><td class="gc bt bl"><span class="rl">J</span></td><td class="gc bt bb"><span class="rl">J</span></td><td class="gc bt bb br"><span class="rl">J</span></td><td class="gc bt bl br"><span class="rl">C</span></td><td class="gc bb bl"><span class="rl">H</span></td><td class="gc bt bb br"><span class="rl">H</span></td><td class="gc bl br"><span class="rl">C</span></td></tr>
+<tr><td class="gc bt bl br"><span class="rl">K</span></td><td class="gc bb bl br"><span class="rl">I</span></td><td class="gc bl br"><span class="rl">K</span></td><td class="gc bl br"><span class="rl">D</span></td><td class="gc bl br st"><span class="sg">&#9733;</span></td><td class="gc bt bb bl"><span class="rl">C</span></td><td class="gc bt bb st"><span class="sg">&#9733;</span></td><td class="gc"><span class="rl">C</span></td><td class="gc bt bb"><span class="rl">C</span></td><td class="gc bt bb"><span class="rl">C</span></td><td class="gc bb br"><span class="rl">C</span></td></tr>
+<tr><td class="gc bb bl"><span class="rl">K</span></td><td class="gc bt bb"><span class="rl">K</span></td><td class="gc bb br st"><span class="sg">&#9733;</span></td><td class="gc bl br"><span class="rl">D</span></td><td class="gc bb bl"><span class="rl">J</span></td><td class="gc bt bb"><span class="rl">J</span></td><td class="gc bt br"><span class="rl">J</span></td><td class="gc bl br"><span class="rl">C</span></td><td class="gc bt bl st"><span class="sg">&#9733;</span></td><td class="gc bt bb"><span class="rl">E</span></td><td class="gc bt bb br"><span class="rl">E</span></td></tr>
+<tr><td class="gc bt bl"><span class="rl">D</span></td><td class="gc bt bb"><span class="rl">D</span></td><td class="gc bt bb"><span class="rl">D</span></td><td class="gc bb"><span class="rl">D</span></td><td class="gc bt bb st"><span class="sg">&#9733;</span></td><td class="gc bt bb br"><span class="rl">D</span></td><td class="gc bl br"><span class="rl">J</span></td><td class="gc bl br"><span class="rl">C</span></td><td class="gc bl br"><span class="rl">E</span></td><td class="gc bt bl"><span class="rl">A</span></td><td class="gc bt br st"><span class="sg">&#9733;</span></td></tr>
+<tr><td class="gc bl br"><span class="rl">D</span></td><td class="gc bt bl st"><span class="sg">&#9733;</span></td><td class="gc bt"><span class="rl">B</span></td><td class="gc bt bb br"><span class="rl">B</span></td><td class="gc bt bb bl"><span class="rl">J</span></td><td class="gc bt bb"><span class="rl">J</span></td><td class="gc bb br st"><span class="sg">&#9733;</span></td><td class="gc bl br"><span class="rl">C</span></td><td class="gc bl br"><span class="rl">E</span></td><td class="gc bl"><span class="rl">A</span></td><td class="gc br"><span class="rl">A</span></td></tr>
+<tr><td class="gc bl br"><span class="rl">D</span></td><td class="gc bb bl"><span class="rl">B</span></td><td class="gc br"><span class="rl">B</span></td><td class="gc bt bl br st"><span class="sg">&#9733;</span></td><td class="gc bt bb bl"><span class="rl">C</span></td><td class="gc bt"><span class="rl">C</span></td><td class="gc bt"><span class="rl">C</span></td><td class="gc br"><span class="rl">C</span></td><td class="gc bl br"><span class="rl">E</span></td><td class="gc bb bl"><span class="rl">A</span></td><td class="gc bb br st"><span class="sg">&#9733;</span></td></tr>
+<tr><td class="gc bl"><span class="rl">D</span></td><td class="gc bt bb br"><span class="rl">D</span></td><td class="gc bl br"><span class="rl">B</span></td><td class="gc bl"><span class="rl">F</span></td><td class="gc bt bb br"><span class="rl">F</span></td><td class="gc bl st"><span class="sg">&#9733;</span></td><td class="gc"><span class="rl">C</span></td><td class="gc br"><span class="rl">C</span></td><td class="gc bb bl st"><span class="sg">&#9733;</span></td><td class="gc bt bb"><span class="rl">E</span></td><td class="gc bt bb br"><span class="rl">E</span></td></tr>
+<tr><td class="gc bb bl br"><span class="rl">D</span></td><td class="gc bt bb bl st"><span class="sg">&#9733;</span></td><td class="gc bb br"><span class="rl">B</span></td><td class="gc bb bl br st"><span class="sg">&#9733;</span></td><td class="gc bt bb bl"><span class="rl">C</span></td><td class="gc bb"><span class="rl">C</span></td><td class="gc bb"><span class="rl">C</span></td><td class="gc bb"><span class="rl">C</span></td><td class="gc bt bb"><span class="rl">C</span></td><td class="gc bt bb"><span class="rl">C</span></td><td class="gc bt bb br"><span class="rl">C</span></td></tr>
+    </table>
+    <figcaption style="flex:1 1 230px;min-width:200px"><b>Figure 1.</b> The eleven regions, recovered
+      from single-bit sensitivity alone, with heavy rules on the region boundaries and the unique
+      solution overlaid. Region sizes are A&#8202;=&#8202;6, B&#8202;=&#8202;8, C&#8202;=&#8202;28, D&#8202;=&#8202;21, E&#8202;=&#8202;9, F&#8202;=&#8202;4, G&#8202;=&#8202;5, H&#8202;=&#8202;7, I&#8202;=&#8202;14, J&#8202;=&#8202;11, K&#8202;=&#8202;8. Region <b>F</b> holds only four cells and needs
+      two non-adjacent stars, so it can be settled by inspection, which makes it a reasonable place to
+      start solving by hand.</figcaption>
+  </div>
+</figure>
+
+<p>The rest of the design followed from the same measurements. A twelve-stage shift register provides
+taps at 1, 10, 11 and 12 cycles back, which on an eleven-wide grid are the cells to the left, above
+right, above and above left; these feed a flag that latches if two stars are ever adjacent. A separate
+two-bit counter tracks the current row and sets a second latching flag. An eight-bit ripple counter
+accumulates the total number of bits presented.</p>
+<p>The README's hint that the circuit is physically arranged to hint at its function becomes useful at
+this point. Colouring each gate by the flip-flop it feeds shows a floorplan that more or less announces
+the answer: one straight chain of twelve cells, two vertical stacks of eleven near-identical slices, and
+a counter running modulo 11.</p>
+
+<h2><span class="sn">5.</span>The acceptance condition</h2>
+<p><code>success</code> is one register deep, and that register's cone depends on 57 signals. Enumerating
+it is out of the question, but probing it with structured assignments is straightforward. Setting all
+eleven column counters to one value, all eleven region counters to another, and sweeping the accumulated
+total leaves exactly one accepting combination.</p>
+<figure>
+  <pre>every column counter   == 2
+every region counter   == 2
+accumulated bit count  == 22
+adjacency flag         == 0     <em>no two stars touch, diagonals included</em>
+row-violation flag     == 0     <em>every row holds exactly two</em>
+load-complete flag     == 1     <em>all 121 bits have been clocked in</em></pre>
+  <figcaption>These are the rules of Star Battle, also sold as Two Not Touch: an eleven by eleven grid
+    divided into eleven regions, two stars in every row, column and region, and no two stars adjacent
+    either orthogonally or diagonally.</figcaption>
+</figure>
+
+<h2><span class="sn">6.</span>Solving it and reading out the answer</h2>
+<p>With the constraints named the search is short. A row-by-row backtracker that places two non-adjacent
+stars in each row and prunes on the remaining column and region budgets finds the grid in Figure 1 and
+confirms that it is the only solution. Serialising that grid in row-major order gives the input word.</p>
+<figure>
+  <pre>0000000101010000100000000000010101010000000000001010000001000001
+000000100000101000010000000100000010000010010001010000000</pre>
+  <figcaption>Feeding these 121 bits on <code>I</code> with <code>enable</code> high, after toggling
+    <code>rst_n</code>, drives <code>success</code> high. Dropping <code>enable</code> then clocks
+    fifteen bytes out of the output generator.</figcaption>
+</figure>
+<figure>
+  <pre>40 42 32 84 87 79 32 83 84 65 82 83 32 42 41
+ (  *     T  W  O     S  T  A  R  S     *  )</pre>
+  <figcaption>The answer, which the designers have wrapped in Verilog attribute syntax.</figcaption>
+</figure>
+
+<h2><span class="sn">7.</span>Easter eggs</h2>
+
+<h3><span class="sn">7.1</span>Morse code in a row below the die</h3>
+<p>Thirty-six placements of two anonymised cells, <code>INTERNAL_3</code> and <code>INTERNAL_7</code>,
+contain no circuitry whatsoever, only a marker rectangle. They sit in a single row at
+y = &minus;52.72 &#181;m, which is outside the die boundary, and they are the only geometry anywhere in
+the file that lies outside it. That is why they are absent from the layout image in the README, and why
+you meet them only if you open the GDS yourself.</p>
+<p>Their widths and spacings are exact multiples of 1.38 &#181;m. A one-unit cell is a dot and a
+three-unit cell is a dash, while the gaps between them measure one, three or seven units, which are the
+standard Morse spacings for symbol, letter and word.</p>
+<figure>
+  <div class="morse"><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:7 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:7 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:7 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:3 0 0"></i><i class="mk" style="flex:1 0 0"></i><i class="gp" style="flex:1 0 0"></i><i class="mk" style="flex:3 0 0"></i></div>
+  <p class="mcode"><b>. - - . . . - . . - . - . . - . . - - - . - - . . . - . . . - . - . . -</b></p>
+  <figcaption><b>Figure 2.</b> The hidden row drawn to true proportion, all 143 units of it. It
+    reads <b>PER ARENAM AD ASTRA</b>, or <em>through the sand to the stars</em>, which is
+    <em>per aspera ad astra</em> with silicon standing in for the hardship.</figcaption>
+</figure>
+
+<h3><span class="sn">7.2</span>A sentence hidden in the sample inputs</h3>
+<p>The two failed attempts in <code>example_inputs.vcd</code> are not arbitrary. Each one is eleven rows
+of eleven bits, and the last four bits of every row are zero. The leading seven bits are an ASCII
+character sent least significant bit first.</p>
+<figure>
+  <pre>..#.#.#....   0010101   reversed 1010100 = T
+...#.##....   0001011   reversed 1101000 = h
+#.#..##....   1010011   reversed 1100101 = e
+                                        <em>...</em>
+attempt 1 = "The night s"     attempt 2 = "ky awaits  "</pre>
+  <figcaption><b>Figure 3.</b> The first three rows of the first attempt. Together the two attempts read
+    <b>The night sky awaits</b>, padded to 22 characters, which is two stars for each of eleven rows.
+    The <code>$version</code> field of the same file says <span class="q">Leave no stone
+    unturned!</span></figcaption>
+</figure>
+
+<h3><span class="sn">7.3</span>Two further messages in the ROM</h3>
+<p>The character ROM in the output generator is addressed partly by the eight-bit star total rather than
+by <code>success</code> alone, and two totals are treated specially. I checked all 256 totals against
+three different load states, together with roughly a thousand random and length-varied inputs. There are
+four messages and no fifth.</p>
+<figure>
+  <div class="scroll"><table class="dt">
+    <thead><tr><th>Input</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td>no stars at all</td><td class="m">EMPTY SKY</td></tr>
+      <tr><td>121 stars, every cell filled</td><td class="m">BIG BANG</td></tr>
+      <tr><td>the unique solution</td><td class="m">(* TWO STARS *)</td></tr>
+      <tr><td>anything else</td><td class="m">TRY AGAIN</td></tr>
+    </tbody>
+  </table></div>
+  <figcaption><b>Table 4.</b> Everything the output generator can say.</figcaption>
+</figure>
+
+<h3><span class="sn">7.4</span>An impossible timestamp</h3>
+<p>The VCD is dated <code>Sat Dec 31 23:59:60 2016</code>. A sixtieth second exists only during a leap
+second, and one was in fact inserted at the end of 31 December 2016, which was indeed a Saturday.</p>
+
+<h2><span class="sn">8.</span>Difficulties</h2>
+<ul class="bul">
+  <li>The <code>mcon</code> problem took the longest to find and would have been invisible without the
+    warm-up example to compare against. If there is one lesson in all of this, it is to build the
+    comparison harness before trusting anything the extractor reports.</li>
+  <li>Symbolic simplification turned out to be the wrong instrument. I began by pushing each next-state
+    function through <code>SOPform</code> in sympy, which never finished even one 13-variable cone.
+    Enumerated cofactor tables and simulation probes answered the same questions in milliseconds. For
+    this sort of work it is more useful to observe the circuit than to put its functions into canonical
+    form.</li>
+  <li>The single undriven net feeds two gates inside the output generator, which is uncomfortable when
+    the whole argument rests on the extraction being exact. I settled it by compiling the design twice,
+    once with that net tied low and once tied high, and confirming that the output bytes were identical
+    for all 256 totals. The net has no effect, so it is a synthesis artefact rather than a wire I had
+    missed.</li>
+  <li>Only every second cell row is occupied, which broke my first attempt at connected-component
+    analysis of the floorplan, because slices of the same block were never quite touching. Collapsing
+    the empty rows fixed it.</li>
+</ul>
+
+<h2><span class="sn">9.</span>Tools</h2>
+<figure>
+  <div class="scroll"><table class="dt">
+    <thead><tr><th>Component</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="m">gdstk</td><td>GDSII parsing and hierarchy flattening</td></tr>
+      <tr><td class="m">shapely, STRtree</td><td>polygon intersection for the extractor</td></tr>
+      <tr><td class="m">extract.py</td><td>union-find netlist extraction, GDS to JSON, about 130 lines</td></tr>
+      <tr><td class="m">cellmodels.py</td><td>parses the SkyWater functional models into Python</td></tr>
+      <tr><td class="m">fastsim.py</td><td>compiles the netlist into flat Python source</td></tr>
+      <tr><td class="m">analyze.py</td><td>logic cones, cofactor tables, sensitivity probes</td></tr>
+      <tr><td class="m">solve.py</td><td>row-by-row Star Battle backtracker</td></tr>
+      <tr><td class="m">matplotlib, scipy</td><td>floorplan renders and module colouring</td></tr>
+    </tbody>
+  </table></div>
+  <figcaption><b>Table 5.</b> No commercial EDA tooling, no KLayout scripting and no SAT solver were
+    involved. The whole thing is roughly 500 lines of Python.</figcaption>
+</figure>
+
+</article>
+
+<div class="foot">
+  <div>Ishaan Seth, August 2026. <a href="/">Home</a> &middot;
+    <a href="https://github.com/ishaanseth">GitHub</a> &middot;
+    <a href="mailto:ishaanseth2005@gmail.com">Email</a></div>
+</div>
+
+</div>
+</body>
+</html>
